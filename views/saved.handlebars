@@ -1,50 +1,45 @@
-<div class="container">
-  <div class="card-columns">
-    {{#each articles}} 
-        <div class="card mb-1" id="{{this.headline_stub}}-card" style="width: 18rem;">
-          <img class="card-img-top" src={{this.img_url}} alt="Card image cap">
-          <div class="card-body">
-            <h5 class="card-title">{{this.headline}}</h5>
-            <p class="card-text">{{this.summary}}</p>
-            <a href={{this.link}} class="btn btn-link">link</a>
-            <button type="button" data-id={{this._id}} class="btn btn-primary notes" data-toggle="modal" data-target="#{{this.headline_stub}}-modal">notes</button>
-            <button type="submit" data-id={{this._id}} data-stub={{this.headline_stub}} class="btn btn-danger delete">delete</button>            
-          </div>
-        </div>
+{{> nav/nav}}
 
-        <div class="modal fade" id="{{this.headline_stub}}-modal" tabindex="-1" role="dialog" aria-labelledby="notesModalLabel" aria-hidden="true">
-          <div class="modal-dialog" role="document">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="notesModalLabel">Notes</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-              </div>
-              <div class="modal-body" id="{{this.headline_stub}}-notes">
-              {{#if this.notes}}
-                {{#each this.notes}}
-                <div class="card">
-                  <div class="card-body">
-                    <h5 class="card-title">{{this.title}}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted" style="font-size: 12px;">Created: {{this.createdAt}}</h6>
-                    <p class="card-text">{{this.body}}</p>
-                  </div>
-                </div>
-                {{/each}}
-              {{/if}}
-                <div class="form-group col-sm-12 text-right">
-                  <input type="text" class="form-control mb-1" id="{{this.headline_stub}}-title" aria-describedby="noteTitle" placeholder="New Note">
-                  <textarea type="text" class="form-control mb-1" id="{{this.headline_stub}}-body" aria-describedby="noteTitle" placeholder="..."></textarea>
-                  <button type="submit" class="btn btn-success col-sm-3 new-note" data-stub={{this.headline_stub}} data-id={{this._id}}>+</button>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">close</button>
-              </div>
-            </div>
-          </div>
-        </div>
-    {{/each}}
-  </div>
+<div class="jumbotron text-center">
+    <h1 class="mongo">Saved Articles</h1>
 </div>
+{{!-- Saved Article Div --}}
+{{#each dbArticle}}
+<div class="container saved-article bg-dark  mt-3 mb-4 p-3">
+<div class="row">
+<div class="col-md-6">
+    <a href={{link}} class="link headline text-white">{{title}}</a>
+    <hr>
+     <p class="summary text-white">   {{summary}} </p>
+ <button class="btn float-right btn-light" id="delete-btn" data-id={{_id}}>Delete This Article</button> 
+ 
+</div>
+<div class="col-md-6 note-div">
+<div class="control-group">
+<label for="textarea" class="text-white">Write your note here.</label>
+<textarea type="text" id="note-text" data-id={{_id}} class="form-control">
+</textarea>
+<button class="mt-3 btn-warning float-right" id="save-note" type="submit" data-id={{_id}}>Save</button>
+</div>
+
+<div class="saved-note">
+    <ul>
+       {{#each note}}
+        <li class="text-white">{{this.text}}<button class="btn text-warning ml-2" id="delete-note" data-id={{_id}}>X</button></li>
+        
+        {{/each}}
+    </ul>
+</div>
+</div>
+</div>
+</div>
+{{/each}}
+
+<footer class="footer mt-5">
+    <div class="container">
+        <p class="text-center text-white">Mongo Scraper</p>
+    </div>
+</footer>
+
+
+<script src="assets/js/app.js"></script>

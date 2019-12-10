@@ -1,52 +1,178 @@
-require('dotenv').config();
-const express = require('express');
-const env = process.env.NODE_ENV || 'development';
+const express = require("express");
+const mongoose = require("mongoose");
+const exphbs = require("express-handlebars");
+const logger = require("morgan");
+
+const axios = require("axios");
+const cheerio = require("cheerio");
+
+const db = require("./models");
+
+const  PORT = process.env.PORT || 3001;
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/mongoHeadlines";
+
 const app = express();
-const PORT = process.env.PORT || 3000;
-const logger = require('morgan');
-const bodyParser = require('body-parser');
-const exphbs = require('express-handlebars');
-const mongoose = require('mongoose');
+
+app.use(logger("dev"));
+app.use(express.urlencoded({ extended : true }));
+app.use(express.json());
+app.use(express.static("public"))
+
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true});
+
+app.engine("handlebars", exphbs({ defaultLayout: "main"}));
+app.set("view engine", "handlebars");
+
+// ==============================================================
+//                     ROUTES
+// ==============================================================
+
+// ///////////////controllers for index.handlebars //////////////////////////
+
+// show all scrapped articles from DB
+app.get("/", function(req, res) {
+    db.Article.find({saved: false }, function(err, result) {
+        if (err) throw err;
+        res.render("index", { result })
+    })
+});
 
 
-// for bodyparser & morgan
-app.use(logger('dev'));
-app.use(express.static('public'));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+// scrapping articles
+app.get("/scrape", function(req, res) {
+    axios.get("https://www.nytimes.com/section/technology").then(function(response) {
+        const $ = cheerio.load(response.data);
+        
+        $("a").each(function(i, element) {
+            const result = {}
+            const address = "https://www.nytimes.com"
+            result.title = $(element).children("h2").text();
+            result.link = address + $(element).attr("href");
+            result.summary = $(element).children("p").text();
 
-// for handlebars
-app.engine('handlebars', exphbs({ defaultLayout: 'main' }));
-app.set('view engine', 'handlebars');
-app.set('views', './views');
+            db.Article.create(result)
+            .then(function(dbArticle) {
+                console.log(dbArticle);
+            })
+            .catch(function(err) {
+                console.log(err);
+            })
+        });
+    res.send("Scrape Complete")
+    })
+});
 
-// routes
-require('./routes/index')(app);
-require('./routes/scrape')(app);
-require('./routes/saved')(app);
-require('./routes/note')(app);
+// update one article to saved:true
+app.put("/saved/:id", function(req, res) {
+    db.Article.updateOne({ _id: req.params.id }, { $set: {saved: true}})
+    .then(function(data) {
+        console.log(data);
+        res.json(data)
+    })
+    .catch(function(err) {
+        res.json(err)
+    })
+});
 
-// database connection
-const config = require('./config/db');
+// clear all articles that not saved
+app.delete("/delete", function (req, res) {
+    db.Article.remove({saved: false})
+    .then(function(data) {
+        console.log(data)
+        res.json(data)
+    })
+    .catch(function(err) {
+        console.log(err)
+    });
 
-mongoose.Promise = Promise;
-mongoose
-  .connect(config.db, { useNewUrlParser: true })
-  .then(res => {
-    console.log(`Connected to database '${res.connections[0].name}' on ${res.connections[0].host}:${res.connections[0].port}`);
-  })
-  .catch(err => {
-    console.log('Database Connection Error: ', err);
-  });
-mongoose.set('useCreateIndex', true);
-mongoose.set('useFindAndModify', false);
+});
 
 
-// start server 
-app.listen(PORT, () => {
-  console.log(
-    '==> 🌎  Listening on port %s. Visit http://localhost:%s/ in your browser.',
-    PORT,
-    PORT
-  );
+///////////////saved.handlebars controllers ///////////
+
+// render all saved articles from DB
+app.get("/saved", function (req, res) {
+    db.Article.find({saved: true})
+    .populate("note")
+    .then(function (dbArticle) {
+        res.render("saved" ,{ dbArticle });
+        console.log(dbArticle)
+    })
+    .catch(function(err) {
+        res.json(err)
+    })
+});
+
+// grab one articles and populate its notes.
+
+app.get("/articles/:id", function(req, res) {
+    db.Article.findOne({ _id:req.params.id })
+    .populate("note")
+    .then(function(dbArticle) {
+        res.json(dbArticle);
+    })
+    .catch(function(err) {
+        res.json(err);
+    })
+});
+
+
+// post new note for a saved article
+app.post("/articles/:id", function(req, res) {
+    db.Note.create(req.body)
+    .then(function(dbNote) {
+        return db.Article.findOneAndUpdate({ _id: req.params.id}, {$push: {note: dbNote._id}}, {newNote: true});
+    })
+    .then(function(db) {
+        res.json(db);
+    })
+    .catch(function(err) {
+        res.json(err)
+    })
+});
+
+// change article status from saved to unsaved
+app.put("/unsaved/:id", function(req, res) {
+    db.Article.updateOne({ _id: req.params.id }, { $set: {saved: false}})
+    .then(function(data) {
+        console.log(data);
+        res.json(data)
+    })
+    .catch(function(err) {
+        res.json(err)
+    })
+});
+
+// delete a note
+app.delete("/notes/:id", function(req, res) {
+    db.Note.remove(
+        {_id: req.params.id}
+    ).then(function(result) {
+        res.json(result);
+    })
+    .catch(function(err) {
+        res.json(err);
+    })
+});
+
+/////////////
+// show all articles from DB in json
+// app.get("/api/articles", function (req, res) {
+//     db.Article.find({})
+//     .then(function(dbArticle) {
+//         res.json(dbArticle);
+//     }) 
+//     .catch(function(err) {
+//         res.json(err);
+//     })
+// });
+
+
+
+// ===============================
+//          SERVER
+// ===============================
+
+app.listen(PORT, function() {
+    console.log("App is listening on port: " + PORT);
 });

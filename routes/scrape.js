@@ -12,7 +12,7 @@ module.exports = (app) => {
       .then((articles) => {
         let articleHeadlines = articles.map(article => article.headline);
 
-        rp('https://www.nytimes.com/section/us', (error, result, body) => {
+        rp('https://www.nytimes.com', (error, result, body) => {
           var $ = cheerio.load(body);
           let newArticles = [];
           $('#latest-panel article.story.theme-summary').each((i, element) => {

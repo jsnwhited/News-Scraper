@@ -1,5 +1,5 @@
 {
-  "name": "news-scraper",
+  "name": "scraper",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
@@ -9,24 +9,21 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jsnwhited/News-Scraper.git"
+    "url": "git+https://github.com/mjfonke/scraper.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jsnwhited/News-Scraper/issues"
+    "url": "https://github.com/mjfonke/scraper/issues"
   },
-  "homepage": "https://github.com/jsnwhited/News-Scraper#readme",
+  "homepage": "https://github.com/mjfonke/scraper#readme",
   "dependencies": {
-    "body-parser": "^1.19.0",
+    "axios": "^0.19.0",
     "cheerio": "^1.0.0-rc.3",
-    "dotenv": "^8.2.0",
-    "event-stream": "^4.0.1",
     "express": "^4.17.1",
     "express-handlebars": "^3.1.0",
     "mongoose": "^5.7.7",
     "morgan": "^1.9.1",
-    "request": "^2.88.0",
-    "request-promise": "^4.2.4"
+    "path": "^0.12.7"
   }
 }

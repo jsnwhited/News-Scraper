@@ -143,9 +143,16 @@ function handleNoteSave() {
     var noteData;
     var newNote = $(".bootbox-body textarea").val().trim();
 
-    if (newNote {
+    if (newNote) {
+        noteData = {
+            _id: $(this).data("article")._id,
+            noteText: newNote
+        };
+        $.post("/api/notes", noteData).then(function() {
+            
+        })
 
-    })
+    }
 }
 
 

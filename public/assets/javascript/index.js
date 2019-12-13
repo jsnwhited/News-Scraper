@@ -54,13 +54,13 @@ panel.data("_id", article._id);
 return panel;
 }
 
-function renderEmpty =
+function renderEmpty() { 
     $(["<div class='alert alert-warning text-center'>",
-        "<h4> there aint not articles!</h4>"
+        "<h4> there aint no articles!</h4>"
     ].join(""));
 
     articleContainer.append(emptyAlert);
-
+}
 
 
 function handleArticleSave() {
